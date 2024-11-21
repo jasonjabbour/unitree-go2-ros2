@@ -1,0 +1,12 @@
+planner_server:
+  ros__parameters:
+    use_sim_time: true
+    expected_planner_frequency: 10.0  # Frequency to plan (Hz)
+    planner_plugins: ["GridBased"]  # List of available planner plugins
+
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.5  # Allowable tolerance in meters
+      use_astar: false  # Use A* search instead of Dijkstra's
+      allow_unknown: true  # Allow planning through unknown space
+      default_tolerance: 0.5  # Default tolerance if none specified

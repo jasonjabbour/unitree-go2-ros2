@@ -4,7 +4,7 @@ project(go2_config)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY launch config maps worlds
+  DIRECTORY launch config maps worlds maps_manual
   DESTINATION share/${PROJECT_NAME}
 )
 
