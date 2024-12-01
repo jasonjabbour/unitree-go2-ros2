@@ -66,23 +66,23 @@ def generate_launch_description():
         ]
     )
 
-    # Static transform publisher for map -> odom
-    static_tf_map_to_odom = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="static_transform_map_to_odom",
-        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
-        parameters=[{'use_sim_time': True}]
-    )
+    # # Static transform publisher for map -> odom
+    # static_tf_map_to_odom = Node(
+    #     package="tf2_ros",
+    #     executable="static_transform_publisher",
+    #     name="static_transform_map_to_odom",
+    #     arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
+    #     parameters=[{'use_sim_time': True}]
+    # )
 
-    # Static transform publisher for odom -> base_link
-    static_tf_odom_to_base_link = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="static_transform_odom_to_base_link",
-        arguments=["0", "0", "0", "0", "0", "0", "odom", "base_link"],
-        parameters=[{'use_sim_time': True}]
-    )
+    # # Static transform publisher for odom -> base_link
+    # static_tf_odom_to_base_link = Node(
+    #     package="tf2_ros",
+    #     executable="static_transform_publisher",
+    #     name="static_transform_odom_to_base_link",
+    #     arguments=["0", "0", "0", "0", "0", "0", "odom", "base_link"],
+    #     parameters=[{'use_sim_time': True}]
+    # )
 
     # # Planner Server Node (Global Planner)
     # planner_server = Node(
@@ -132,8 +132,8 @@ def generate_launch_description():
     ld.add_action(container)
     ld.add_action(map_server)
     ld.add_action(amcl)
-    ld.add_action(static_tf_map_to_odom)
-    ld.add_action(static_tf_odom_to_base_link)
+    # ld.add_action(static_tf_map_to_odom)
+    # ld.add_action(static_tf_odom_to_base_link)
     # ld.add_action(planner_server)
     # ld.add_action(controller_server)
     ld.add_action(lifecycle_manager)
