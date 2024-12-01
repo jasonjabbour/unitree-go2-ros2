@@ -11,7 +11,8 @@ def generate_launch_description():
     package_share_directory = get_package_share_directory('go2_config')
     map_yaml_file = os.path.join(package_share_directory, 'maps_manual', 'square_map', 'square_map.yaml')
     map_server_params_file = os.path.join(package_share_directory, 'maps_manual', 'square_map', 'map_server.yaml')
-    
+    nav_params_file = os.path.join(package_share_directory, 'config', 'navigation', 'nav2_params.yaml')
+
 
     ld = LaunchDescription()
 
@@ -57,7 +58,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {'use_sim_time': True},
-            os.path.join(package_share_directory, 'config', 'amcl_params.yaml')
+            nav_params_file
         ],
         remappings=[
             ('scan', '/scan'),
@@ -65,37 +66,54 @@ def generate_launch_description():
         ]
     )
 
-    # Planner Server Node (Global Planner)
-    planner_server = Node(
-        package='nav2_planner',
-        executable='planner_server',
-        name='planner_server',
-        output='screen',
-        parameters=[
-            {'use_sim_time': True},  # Ensure use_sim_time
-            os.path.join(package_share_directory, 'config', 'navigation', 'global_planner_params.yaml')
-        ],
-        remappings=[
-            ('/plan', '/global_plan'),  # Output topic for the computed path
-            ('/goal_pose', '/navigate_goal')  # Topic for navigation goals
-        ]
+    # Static transform publisher for map -> odom
+    static_tf_map_to_odom = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_transform_map_to_odom",
+        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
+        parameters=[{'use_sim_time': True}]
     )
 
-    # Controller Server Node (Local Planner)
-    controller_server = Node(
-        package='nav2_controller',
-        executable='controller_server',
-        name='controller_server',
-        output='screen',
-        parameters=[
-            {'use_sim_time': True},  # Ensure use_sim_time is enabled
-            os.path.join(package_share_directory, 'config', 'navigation', 'local_planner_params.yaml')  # Updated config file
-        ],
-        remappings=[
-            ('/cmd_vel', '/cmd_vel'),  # Output velocity commands
-            ('/plan', '/global_plan')  # Global path to follow
-        ]
+    # Static transform publisher for odom -> base_link
+    static_tf_odom_to_base_link = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_transform_odom_to_base_link",
+        arguments=["0", "0", "0", "0", "0", "0", "odom", "base_link"],
+        parameters=[{'use_sim_time': True}]
     )
+
+    # # Planner Server Node (Global Planner)
+    # planner_server = Node(
+    #     package='nav2_planner',
+    #     executable='planner_server',
+    #     name='planner_server',
+    #     output='screen',
+    #     parameters=[
+    #         {'use_sim_time': True},  # Ensure use_sim_time
+    #         os.path.join(package_share_directory, 'config', 'navigation', 'global_planner_params.yaml')
+    #     ],
+    #     remappings=[
+    #         ('plan', '/global_plan')  # Output topic for the computed path
+    #     ]
+    # )
+
+    # # Controller Server Node (Local Planner)
+    # controller_server = Node(
+    #     package='nav2_controller',
+    #     executable='controller_server',
+    #     name='controller_server',
+    #     output='screen',
+    #     parameters=[
+    #         {'use_sim_time': True},  # Ensure use_sim_time is enabled
+    #         os.path.join(package_share_directory, 'config', 'navigation', 'local_planner_params.yaml')  # Updated config file
+    #     ],
+    #     remappings=[
+    #         ('/cmd_vel', '/cmd_vel'),  # Output velocity commands
+    #         ('/plan', '/global_plan')  # Global path to follow
+    #     ]
+    # )
 
     # Lifecycle Manager to automatically manage lifecycle states
     lifecycle_manager = Node(
@@ -106,7 +124,7 @@ def generate_launch_description():
         parameters=[{
             'use_sim_time': True,        # Enable simulated time
             'autostart': True,           # Automatically start lifecycle nodes
-            'node_names': ['map_server', 'amcl', 'planner_server', 'controller_server']  # List of nodes to manage
+            'node_names': ['map_server', 'amcl'] #, 'planner_server', 'controller_server']  # List of nodes to manage
         }]
     )
 
@@ -114,8 +132,10 @@ def generate_launch_description():
     ld.add_action(container)
     ld.add_action(map_server)
     ld.add_action(amcl)
-    ld.add_action(planner_server)
-    ld.add_action(controller_server)
+    ld.add_action(static_tf_map_to_odom)
+    ld.add_action(static_tf_odom_to_base_link)
+    # ld.add_action(planner_server)
+    # ld.add_action(controller_server)
     ld.add_action(lifecycle_manager)
 
 

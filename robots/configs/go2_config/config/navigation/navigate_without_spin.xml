@@ -1,0 +1,11 @@
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <!-- Compute the path to the desired pose -->
+      <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+
+      <!-- Follow the computed path -->
+      <FollowPath path="{path}" controller_id="FollowPath"/>
+    </Sequence>
+  </BehaviorTree>
+</root>
