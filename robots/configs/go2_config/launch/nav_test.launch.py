@@ -115,6 +115,7 @@ def generate_launch_description():
     #     ]
     # )
 
+
     # Lifecycle Manager to automatically manage lifecycle states
     lifecycle_manager = Node(
         package='nav2_lifecycle_manager',

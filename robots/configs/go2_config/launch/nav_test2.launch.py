@@ -82,6 +82,7 @@ def generate_launch_description():
         }]
     )
 
+
     # Add nodes to the launch description
     ld.add_action(planner_server)
     ld.add_action(controller_server)

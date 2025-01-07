@@ -15,7 +15,7 @@ from launch.actions import (
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
-
+import time
 
 def generate_launch_description():
 
@@ -157,57 +157,37 @@ def generate_launch_description():
         ]
     )
 
-    # Planner Server Node (Global Planner)
-    planner_server = Node(
-        package='nav2_planner',
-        executable='planner_server',
-        name='planner_server',
-        output='screen',
-        parameters=[
-            {'use_sim_time': True},  # Ensure use_sim_time
-            nav_params_file
-        ],
-        remappings=[
-            ('plan', '/global_plan')  # Output topic for the computed path
-        ]
-    )
-
-    # Controller Server Node (Local Controller)
-    controller_server = Node(
-        package='nav2_controller',
-        executable='controller_server',
-        name='controller_server',
-        output='screen',
-        parameters=[
-            {'use_sim_time': True},  # Ensure use_sim_time
-            nav_params_file
-        ]
-    )
+    # global_costmap_node = Node(
+    #     package='nav2_costmap_2d',
+    #     executable='costmap_2d_node',
+    #     name='global_costmap',
+    #     output='screen',
+    #     parameters=[
+    #         {'use_sim_time': True},  # Synchronize with simulation
+    #         nav_params_file
+    #     ],
+    #     remappings=[
+    #         ('/tf', 'tf'),
+    #         ('/tf_static', 'tf_static')
+    #     ]
+    # )
 
 
-    # BT Navigator Node
-    bt_navigator = Node(
-        package='nav2_bt_navigator',
-        executable='bt_navigator',
-        name='bt_navigator',
-        output='screen',
-        parameters=[
-            {'use_sim_time': True, 
-            'default_nav_through_poses_bt_xml': bt_xml_file},  # Ensure use_sim_time
-            nav_params_file,
-        ]
-    )
-
-    behavior_server = Node(
-        package="nav2_behaviors",
-        executable="behavior_server",
-        name="behavior_server",
-        output="screen",
-        parameters=[
-            nav_params_file
-        ]
-    )
-
+    # local_costmap_node = Node(
+    #     package='nav2_costmap_2d',
+    #     executable='costmap_2d_node',
+    #     name='local_costmap',
+    #     output='screen',
+    #     parameters=[
+    #         {'use_sim_time': True},  # Synchronize with simulation
+    #         nav_params_file 
+    #     ],
+    #     remappings=[
+    #         ('/tf', 'tf'),
+    #         ('/tf_static', 'tf_static')
+    #     ]
+    # )
+        
 
     # Lifecycle Manager to automatically manage lifecycle states
     lifecycle_manager = Node(
@@ -219,11 +199,7 @@ def generate_launch_description():
             'use_sim_time': True,        # Enable simulated time
             'autostart': True,           # Automatically start lifecycle nodes
             'node_names': ['map_server',
-                           'amcl', 
-                           'planner_server', 
-                           'controller_server', 
-                           'bt_navigator', 
-                           'behavior_server'] #, 'planner_server', 'controller_server']  # List of nodes to manage
+                           'amcl'] #, 'planner_server', 'controller_server', 'bt_navigator', 'behavior_server']  # List of nodes to manage
         }]
     )
 
@@ -267,10 +243,66 @@ def generate_launch_description():
             container, 
             map_server, 
             amcl, 
-            planner_server, 
-            controller_server, 
-            bt_navigator,
-            behavior_server,
+            # global_costmap_node,  
+            # local_costmap_node, 
+            # planner_server, 
+            # controller_server, 
+            # bt_navigator,
+            # behavior_server,
             lifecycle_manager,
         ]
     )
+
+
+
+
+ # # Planner Server Node (Global Planner)
+    # planner_server = Node(
+    #     package='nav2_planner',
+    #     executable='planner_server',
+    #     name='planner_server',
+    #     output='screen',
+    #     parameters=[
+    #         {'use_sim_time': True},  # Ensure use_sim_time
+    #         nav_params_file
+    #     ],
+    #     remappings=[
+    #         ('plan', '/global_plan')  # Output topic for the computed path
+    #     ]
+    # )
+
+    # # Controller Server Node (Local Controller)
+    # controller_server = Node(
+    #     package='nav2_controller',
+    #     executable='controller_server',
+    #     name='controller_server',
+    #     output='screen',
+    #     parameters=[
+    #         {'use_sim_time': True},  # Ensure use_sim_time
+    #         nav_params_file
+    #     ]
+    # )
+
+
+    # # BT Navigator Node
+    # bt_navigator = Node(
+    #     package='nav2_bt_navigator',
+    #     executable='bt_navigator',
+    #     name='bt_navigator',
+    #     output='screen',
+    #     parameters=[
+    #         {'use_sim_time': True, 
+    #         'default_nav_through_poses_bt_xml': bt_xml_file},  # Ensure use_sim_time
+    #         nav_params_file,
+    #     ]
+    # )
+
+    # behavior_server = Node(
+    #     package="nav2_behaviors",
+    #     executable="behavior_server",
+    #     name="behavior_server",
+    #     output="screen",
+    #     parameters=[
+    #         nav_params_file
+    #     ]
+    # )

@@ -1,6 +1,6 @@
 footprint_to_odom_ekf:
   ros__parameters:
-    frequency: 50.0
+    frequency: 200.0
     publish_tf: true
     transform_timeout: 0.01
     # transform_time_offset: 0.05
@@ -13,7 +13,7 @@ footprint_to_odom_ekf:
     #vroll , vpitch, vyaw,
     #ax    , ay    , az
 
-    odom0: odom/raw
+    odom0: odom/ground_truth #odom/raw
     odom0_config: [false, false, false,
                   false, false, false,
                     true,  true, false,
