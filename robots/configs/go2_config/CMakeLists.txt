@@ -8,4 +8,15 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  scripts/twist2twiststamped.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  scripts/sim_clock.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+
 ament_package()
