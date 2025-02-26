@@ -43,7 +43,7 @@ def generate_launch_description():
         description="Use simulation (Gazebo) clock if true",
     )
     declare_rviz = DeclareLaunchArgument(
-        "rviz", default_value="false", description="Launch rviz"
+        "rviz", default_value="true", description="Launch rviz"
     )
     declare_robot_name = DeclareLaunchArgument(
         "robot_name", default_value="go2", description="Robot name"
