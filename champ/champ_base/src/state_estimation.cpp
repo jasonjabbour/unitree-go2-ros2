@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <state_estimation.h>
+#include "tracetools_benchmark/tracetools.h"
 
 champ::Odometry::Time rosTimeToChampTime(const rclcpp::Time& time)
 {
@@ -44,23 +45,29 @@ StateEstimation::StateEstimation():
     base_broadcaster_ =
       std::make_unique<tf2_ros::TransformBroadcaster>(*this);
       
-    joint_states_subscriber_.subscribe(reinterpret_cast<rclcpp::Node*>(this),  "joint_states");
-    foot_contacts_subscriber_.subscribe(reinterpret_cast<rclcpp::Node*>(this), "foot_contacts");
+    // LatentROS: bypass message_filters sync for benchmarking.
+    // Direct subscription on joint_states triggers callback immediately;
+    // foot_contacts are cached from a separate subscription.
+    latentros_contacts_sub_ = this->create_subscription<champ_msgs::msg::ContactsStamped>(
+        "foot_contacts", rclcpp::QoS(10),
+        [this](champ_msgs::msg::ContactsStamped::SharedPtr msg) {
+            latentros_last_contacts_ = msg;
+        });
+    latentros_joint_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
+        "joint_states", rclcpp::QoS(10),
+        [this](sensor_msgs::msg::JointState::SharedPtr msg) {
+            if (latentros_last_contacts_) {
+                synchronized_callback_(msg, latentros_last_contacts_);
+            }
+        });
 
-    this->sync = std::make_unique<Sync>(
-        SyncPolicy(10), 
-        this->joint_states_subscriber_, 
-        this->foot_contacts_subscriber_
-    );
-    
-    // Register callback functions
-    this->sync->registerCallback(
-        std::bind(
-            &StateEstimation::synchronized_callback_, 
-            this,
-            std::placeholders::_1, std::placeholders::_2
-        )
-    );
+    // Original sync disabled for LatentROS benchmarking
+    // this->sync->registerCallback(std::bind(
+    //         &StateEstimation::synchronized_callback_,
+    //         this,
+    //         std::placeholders::_1, std::placeholders::_2
+    //     )
+    // );
 
     footprint_to_odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom/raw", 1);
     base_to_footprint_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("base_to_footprint_pose", 1);
@@ -118,9 +125,16 @@ StateEstimation::StateEstimation():
          std::bind(&StateEstimation::publishBaseToFootprint_, this));
 }
 
-void StateEstimation::synchronized_callback_(const std::shared_ptr<sensor_msgs::msg::JointState const>& joints_msg, 
+void StateEstimation::synchronized_callback_(const std::shared_ptr<sensor_msgs::msg::JointState const>& joints_msg,
                                 const std::shared_ptr<champ_msgs::msg::ContactsStamped const>& contacts_msg)
 {
+    latentros_key_ = joints_msg->header.stamp.nanosec;
+    latentros_new_data_ = true;
+    TRACEPOINT(robotperf_msg_received_1,
+        static_cast<const void *>(this),
+        static_cast<const void *>(joints_msg.get()),
+        latentros_key_);
+
     last_sync_time_ = clock_.now();
 
     float current_joint_positions[12];
@@ -198,6 +212,16 @@ void StateEstimation::publishFootprintToOdom_()
     odom.twist.covariance[7] = 0.3;
     odom.twist.covariance[35] = 0.017;
     
+    // LatentROS: only publish tracepoint when new data was received
+    if (latentros_new_data_) {
+        latentros_new_data_ = false;
+        odom.header.stamp.nanosec = latentros_key_;
+        TRACEPOINT(robotperf_msg_published_1,
+            static_cast<const void *>(this),
+        static_cast<const void *>(&odom),
+        latentros_key_);
+    }
+
     footprint_to_odom_publisher_->publish(odom);
 }
 

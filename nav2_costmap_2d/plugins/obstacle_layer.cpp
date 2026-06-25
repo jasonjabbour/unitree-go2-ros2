@@ -46,6 +46,8 @@
 #include "pluginlib/class_list_macros.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "nav2_costmap_2d/costmap_math.hpp"
+#include "tracetools_benchmark/tracetools.h"
+#include "nav2_costmap_2d/latentros_key.hpp"
 
 PLUGINLIB_EXPORT_CLASS(nav2_costmap_2d::ObstacleLayer, nav2_costmap_2d::Layer)
 
@@ -328,6 +330,13 @@ ObstacleLayer::laserScanCallback(
   sensor_msgs::msg::LaserScan::ConstSharedPtr message,
   const std::shared_ptr<nav2_costmap_2d::ObservationBuffer> & buffer)
 {
+  // LatentROS: store key + signal new data for costmap_2d_ros
+  g_latentros_costmap_key = message->header.stamp.nanosec;
+  g_latentros_new_data.store(true, std::memory_order_release);
+  TRACEPOINT(robotperf_msg_received_1,
+      static_cast<const void *>(this),
+      static_cast<const void *>(message.get()),
+      message->header.stamp.nanosec);
   // project the laser into a point cloud
   sensor_msgs::msg::PointCloud2 cloud;
   cloud.header = message->header;
@@ -362,6 +371,11 @@ ObstacleLayer::laserScanValidInfCallback(
   sensor_msgs::msg::LaserScan::ConstSharedPtr raw_message,
   const std::shared_ptr<nav2_costmap_2d::ObservationBuffer> & buffer)
 {
+  g_latentros_costmap_key = raw_message->header.stamp.nanosec;
+  TRACEPOINT(robotperf_msg_received_1,
+      static_cast<const void *>(this),
+      static_cast<const void *>(raw_message.get()),
+      raw_message->header.stamp.nanosec);
   // Filter positive infinities ("Inf"s) to max_range.
   float epsilon = 0.0001;  // a tenth of a millimeter
   sensor_msgs::msg::LaserScan message = *raw_message;

@@ -62,6 +62,11 @@ class StateEstimation: public rclcpp::Node
     message_filters::Subscriber<champ_msgs::msg::ContactsStamped> foot_contacts_subscriber_;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscriber_;
 
+    // LatentROS: direct subscription (bypasses sync for benchmarking)
+    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr latentros_joint_sub_;
+    rclcpp::Subscription<champ_msgs::msg::ContactsStamped>::SharedPtr latentros_contacts_sub_;
+    champ_msgs::msg::ContactsStamped::SharedPtr latentros_last_contacts_;
+
 
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr footprint_to_odom_publisher_;
     rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr base_to_footprint_publisher_;
@@ -86,6 +91,8 @@ class StateEstimation: public rclcpp::Node
     rclcpp::Clock clock_;
     
     sensor_msgs::msg::Imu::SharedPtr last_imu_;
+    uint32_t latentros_key_ = 0;   // LatentROS: stored key for propagation
+    bool latentros_new_data_ = false;  // LatentROS: event-driven publish flag
 
     champ::GaitConfig gait_config_;
 

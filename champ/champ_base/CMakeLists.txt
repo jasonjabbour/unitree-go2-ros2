@@ -16,6 +16,7 @@ find_package(tf2_ros REQUIRED)
 find_package(urdf REQUIRED)
 find_package(champ REQUIRED)
 find_package(message_filters REQUIRED)
+find_package(tracetools_benchmark REQUIRED)
 
 
 set(dependencies
@@ -31,6 +32,7 @@ set(dependencies
   urdf
   message_filters
   champ
+  tracetools_benchmark
 )
 
 

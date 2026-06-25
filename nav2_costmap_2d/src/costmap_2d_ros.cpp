@@ -51,6 +51,9 @@
 #include "tf2_ros/create_timer_ros.h"
 #include "nav2_util/robot_utils.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
+#include "tracetools_benchmark/tracetools.h"
+
+#include "nav2_costmap_2d/latentros_key.hpp"
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -489,8 +492,15 @@ Costmap2DROS::mapUpdateLoop(double frequency)
         if ((last_publish_ + publish_cycle_ < current_time) ||  // publish_cycle_ is due
           (current_time < last_publish_))      // time has moved backwards, probably due to a switch to sim_time // NOLINT
         {
-          RCLCPP_DEBUG(get_logger(), "Publish costmap at %s", name_.c_str());
-          costmap_publisher_->publishCostmap();
+          // LatentROS: only publish when obstacle_layer received new sensor data
+          if (g_latentros_new_data.exchange(false, std::memory_order_acquire)) {
+            RCLCPP_DEBUG(get_logger(), "Publish costmap at %s", name_.c_str());
+            TRACEPOINT(robotperf_msg_published_1,
+                static_cast<const void *>(this),
+                static_cast<const void *>(this),
+                g_latentros_costmap_key);
+            costmap_publisher_->publishCostmap();
+          }
           last_publish_ = current_time;
         }
       }
